@@ -21,7 +21,7 @@ const app = express();
 const server = http.createServer(app);
 const io = socketIo(server, {
     cors: {
-        origin: process.env.FRONTEND_URL || "*",
+        origin: process.env.CORS_ORIGIN || "*",
         methods: ["GET", "POST"],
         credentials: true
     }
@@ -29,8 +29,20 @@ const io = socketIo(server, {
 
 const PORT = process.env.PORT || 3000;
 
-// Security Middleware Stack
-app.use(helmet());
+// --- THIS IS THE CORRECTED SECURITY SECTION ---
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        ...helmet.contentSecurityPolicy.getDefaultDirectives(),
+        "script-src": ["'self'", "https://cdn.socket.io"],
+        "script-src-attr": ["'self'", "'unsafe-inline'"],
+      },
+    },
+  })
+);
+// ------------------------------------------
+
 app.use(compression());
 app.use(cors({ origin: process.env.CORS_ORIGIN || "*" }));
 app.use(morgan('dev'));
