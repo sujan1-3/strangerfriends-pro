@@ -1,8 +1,5 @@
-
 // StrangerFriends - Real-world Application with WebRTC Integration
-
 const backendUrl = "https://strangerfriends-pro.onrender.com";
-
 
 class StrangerFriendsApp {
     constructor() {
@@ -19,7 +16,7 @@ class StrangerFriendsApp {
             activeRooms: 0,
             waitingUsers: 0
         };
-
+                                     
         // App state
         this.isConnected = false;
         this.isMediaInitialized = false;
@@ -132,8 +129,6 @@ class StrangerFriendsApp {
         this.socket.on('match-found', (data) => {
             console.log('🎯 Match found!', data);
             this.partnerCountry = data.partner.country;
-            this.webrtc.setRoomId(data.roomId); // Also set the room ID
-            this.webrtc.setPartnerId(data.partner.socketId); // Also set the partner ID
             this.startVideoChat();
         });
 
