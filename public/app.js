@@ -83,7 +83,7 @@ class StrangerFriendsApp {
         return new Promise((resolve, reject) => {
             console.log('🔌 Connecting to server...');
 
-            const serverUrl = window.location.origin;
+            const serverUrl = "https://strangerfriends-pro.onrender.com";
             this.socket = io(serverUrl, {
                 transports: ['websocket', 'polling'],
                 timeout: 10000,
