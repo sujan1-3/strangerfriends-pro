@@ -1,4 +1,9 @@
+
 // StrangerFriends - Real-world Application with WebRTC Integration
+
+const backendUrl = "https://strangerfriends-pro.onrender.com";
+
+
 class StrangerFriendsApp {
     constructor() {
         this.socket = null;
