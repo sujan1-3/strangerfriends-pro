@@ -1,4 +1,3 @@
-// Core server initialization
 const express = require('express');
 const http = require('http');
 const { Server } = require("socket.io");
@@ -21,14 +20,16 @@ const io = new Server(server, {
 
 const PORT = process.env.PORT || 3000;
 
-// Security Middleware to allow Socket.IO CDN
+// Security Middleware - More permissive for Socket.IO
 app.use(
   helmet({
     contentSecurityPolicy: {
       directives: {
-        ...helmet.contentSecurityPolicy.getDefaultDirectives(),
-        "script-src": ["'self'", "https://cdn.socket.io", "'unsafe-inline'"],
-        "script-src-attr": ["'self'", "'unsafe-inline'"],
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'", "https://cdn.socket.io", "'unsafe-inline'"],
+        styleSrc: ["'self'", "'unsafe-inline'"],
+        connectSrc: ["'self'", "wss:", "ws:"],
+        imgSrc: ["'self'", "data:", "https:"]
       },
     },
   })
@@ -37,7 +38,7 @@ app.use(
 app.use(cors({ origin: process.env.CORS_ORIGIN || "*" }));
 app.use(express.json());
 
-// Serve the static frontend files
+// Serve static files from public directory
 app.use(express.static(path.join(__dirname, 'public')));
 
 // In-memory storage
@@ -51,7 +52,7 @@ function getClientIP(socket) {
 }
 
 function detectCountry(ip) {
-    if (ip === '127.0.0.1' || ip === '::1') {
+    if (ip === '127.0.0.1' || ip === '::1' || ip === '::ffff:127.0.0.1') {
         return { code: 'US', name: 'United States', flag: '🇺🇸' };
     }
     try {
@@ -111,7 +112,7 @@ io.on('connection', (socket) => {
     console.log('User connected:', socket.id);
     const userCountry = detectCountry(getClientIP(socket));
     
-    // Send ICE servers and country info to client
+    // Send connection info to client
     socket.emit('ice-servers', { 
         iceServers: [
             { urls: 'stun:stun.l.google.com:19302' },
@@ -121,6 +122,7 @@ io.on('connection', (socket) => {
     });
     
     socket.on('set-preferences', (preferences) => {
+        console.log('User set preferences:', preferences);
         const currentUser = {
             socketId: socket.id,
             gender: preferences.gender,
@@ -136,21 +138,28 @@ io.on('connection', (socket) => {
             
             // Join both users to the room
             socket.join(roomId);
-            io.sockets.sockets.get(match.socketId)?.join(roomId);
+            const matchSocket = io.sockets.sockets.get(match.socketId);
+            if (matchSocket) {
+                matchSocket.join(roomId);
+            }
             
+            console.log(`Match created: ${socket.id} <-> ${match.socketId}`);
             io.to(currentUser.socketId).emit('match-found', { roomId, partner: match });
             io.to(match.socketId).emit('match-found', { roomId, partner: currentUser });
         } else {
             waitingUsers.get(currentUser.gender).push(currentUser);
             socket.emit('waiting-for-match');
+            console.log('User added to waiting list:', socket.id);
         }
     });
 
     socket.on('offer', (data) => { 
+        console.log('Offer from:', socket.id);
         socket.to(data.roomId).emit('offer', { offer: data.offer, from: socket.id }); 
     });
     
     socket.on('answer', (data) => { 
+        console.log('Answer from:', socket.id);
         socket.to(data.roomId).emit('answer', { answer: data.answer, from: socket.id }); 
     });
     
@@ -158,8 +167,8 @@ io.on('connection', (socket) => {
         socket.to(data.roomId).emit('ice-candidate', { candidate: data.candidate, from: socket.id }); 
     });
 
-    socket.on('disconnect', () => {
-        console.log('User disconnected:', socket.id);
+    socket.on('disconnect', (reason) => {
+        console.log('User disconnected:', socket.id, 'Reason:', reason);
         connectedUsers.delete(socket.id);
         for(const gender of ['male', 'female', 'both']) {
             waitingUsers.set(gender, waitingUsers.get(gender).filter(u => u.socketId !== socket.id));
@@ -169,10 +178,9 @@ io.on('connection', (socket) => {
         for (const [roomId, users] of activeRooms.entries()) {
             if (users.includes(socket.id)) {
                 activeRooms.delete(roomId);
-                // Notify other user in room
                 const otherUser = users.find(id => id !== socket.id);
                 if (otherUser) {
-                    io.to(otherUser).emit('partner-left');
+                    io.to(otherUser).emit('partner-left', { reason });
                 }
                 break;
             }
@@ -181,6 +189,5 @@ io.on('connection', (socket) => {
 });
 
 server.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
+    console.log(`🚀 Server running on port ${PORT}`);
 });
-
