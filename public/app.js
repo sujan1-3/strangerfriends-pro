@@ -536,7 +536,7 @@ class StrangerFriendsApp {
     // API Calls
     async loadStats() {
         try {
-            const response = await fetch('${backendUrl}/api/stats');
+            const response = await fetch(`${backendUrl}/api/stats`);
             if (response.ok) {
                 const stats = await response.json();
                 this.updateStatsDisplay(stats);
