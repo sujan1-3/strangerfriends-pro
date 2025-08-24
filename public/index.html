@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StrangerFriends - Connect with People Worldwide</title>
+    <meta name="description" content="Free video chat with strangers worldwide. Real country detection, gender filters, no registration required. Safe and secure video chatting.">
+    <meta name="keywords" content="video chat, stranger chat, free chat, country detection, random chat, worldwide connections">
+
+    <!-- Favicon -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌍</text></svg>">
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="style.css">
+
+    <!-- Security -->
+    <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
+
+    <!-- PWA -->
+    <meta name="theme-color" content="#8B5CF6">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div id="loading-screen" class="loading-screen">
+        <div class="loading-content">
+            <div class="loading-logo">🌍</div>
+            <h1>StrangerFriends</h1>
+            <p>Connecting people worldwide...</p>
+            <div class="loading-spinner"></div>
+        </div>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="navbar" id="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <div class="logo-container">
+                    <span class="logo-globe">🌍</span>
+                    <span class="logo-text">StrangerFriends</span>
+                </div>
+            </div>
+            <div class="nav-links">
+                <button id="stats-btn" class="btn btn--secondary btn--sm">📊</button>
+                <button id="safety-btn" class="btn btn--secondary btn--sm">🛡️</button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Connection Status -->
+    <div id="connection-status" class="connection-status">
+        <span class="status-dot"></span>
+        <span class="status-text">Connecting...</span>
+    </div>
+
+    <!-- Hero Section -->
+    <section id="hero-section" class="hero-section">
+        <div class="floating-elements">
+            <div class="floating-element floating-1"></div>
+            <div class="floating-element floating-2"></div>
+            <div class="floating-element floating-3"></div>
+            <div class="floating-country-flags">
+                <div class="floating-flag">🇺🇸</div>
+                <div class="floating-flag">🇬🇧</div>
+                <div class="floating-flag">🇨🇦</div>
+                <div class="floating-flag">🇩🇪</div>
+                <div class="floating-flag">🇫🇷</div>
+                <div class="floating-flag">🇯🇵</div>
+                <div class="floating-flag">🇮🇳</div>
+                <div class="floating-flag">🇧🇷</div>
+            </div>
+        </div>
+
+        <div class="hero-content">
+            <div class="hero-logo">
+                <div class="logo-globe-main">🌐</div>
+            </div>
+            <h1 class="hero-title">StrangerFriends</h1>
+            <p class="hero-tagline">Connect with people worldwide - See where they're from!</p>
+
+            <div class="hero-features">
+                <div class="feature-pill">✨ 100% Free</div>
+                <div class="feature-pill">🌍 Real Country Detection</div>
+                <div class="feature-pill">🚀 No Registration</div>
+                <div class="feature-pill">🔒 Safe & Secure</div>
+            </div>
+
+            <div class="user-location" id="user-location" style="display: none;">
+                <div class="location-card">
+                    <span class="location-flag" id="user-flag">🏳️</span>
+                    <span class="location-text">
+                        You're connecting from <strong id="user-country">Loading...</strong>
+                    </span>
+                </div>
+            </div>
+
+            <button id="start-chatting-btn" class="btn btn--primary btn--lg cta-button">
+                🎥 Start Chatting Now
+            </button>
+
+            <div class="user-counter">
+                <span class="user-count" id="user-count">Loading...</span> people online worldwide
+            </div>
+        </div>
+    </section>
+
+    <!-- Gender Selection Screen -->
+    <section id="gender-selection" class="gender-selection screen" style="display: none;">
+        <div class="screen-container">
+            <div class="screen-header">
+                <h2>Choose Your Preference</h2>
+                <p>Who would you like to chat with?</p>
+            </div>
+
+            <div class="gender-options">
+                <button class="gender-btn" data-gender="male" data-preference="male">
+                    <div class="gender-icon">♂️</div>
+                    <div class="gender-label">Male</div>
+                    <div class="gender-description">Chat with males</div>
+                </button>
+
+                <button class="gender-btn" data-gender="female" data-preference="female">
+                    <div class="gender-icon">♀️</div>
+                    <div class="gender-label">Female</div>
+                    <div class="gender-description">Chat with females</div>
+                </button>
+
+                <button class="gender-btn" data-gender="both" data-preference="both">
+                    <div class="gender-icon">🌈</div>
+                    <div class="gender-label">Everyone</div>
+                    <div class="gender-description">Chat with everyone</div>
+                </button>
+            </div>
+
+            <div class="screen-actions">
+                <button id="back-to-home" class="btn btn--secondary">← Back to Home</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Waiting Screen -->
+    <section id="waiting-screen" class="waiting-screen screen" style="display: none;">
+        <div class="screen-container">
+            <div class="waiting-animation">
+                <div class="globe-spinner">🌍</div>
+                <div class="connection-rings">
+                    <div class="ring ring-1"></div>
+                    <div class="ring ring-2"></div>
+                    <div class="ring ring-3"></div>
+                </div>
+            </div>
+
+            <div class="waiting-status">
+                <h2 id="waiting-message">Looking for someone to chat with...</h2>
+                <div class="waiting-info">
+                    <p>🌍 Searching worldwide for the perfect match</p>
+                    <p>⏱️ Average wait time: <span id="wait-time">30 seconds</span></p>
+                </div>
+            </div>
+
+            <div class="screen-actions">
+                <button id="cancel-waiting" class="btn btn--secondary">Cancel</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Video Chat Screen -->
+    <section id="video-chat" class="video-chat-screen screen" style="display: none;">
+        <div class="video-container">
+            <div class="video-layout">
+                <!-- Remote User Video -->
+                <div class="video-frame remote-video">
+                    <video id="remoteVideo" class="video-element" autoplay playsinline></video>
+                    <div class="video-placeholder" id="remote-placeholder">
+                        <div class="avatar-placeholder">👤</div>
+                        <div class="connecting-text">Connecting...</div>
+                    </div>
+                    <div class="video-overlay">
+                        <div class="connection-indicator" id="connection-indicator">🔴 Connecting</div>
+                    </div>
+                    <div class="country-overlay remote-country">
+                        <span class="country-flag" id="remote-flag">🌍</span>
+                        <span class="country-name" id="remote-country-name">Connecting...</span>
+                    </div>
+                </div>
+
+                <!-- Local User Video -->
+                <div class="video-frame local-video">
+                    <video id="localVideo" class="video-element" autoplay muted playsinline></video>
+                    <div class="video-placeholder" id="local-placeholder">
+                        <div class="avatar-placeholder">👤</div>
+                        <div class="connecting-text">You</div>
+                    </div>
+                    <div class="video-overlay">
+                        <div class="local-indicator">You</div>
+                    </div>
+                    <div class="country-overlay local-country">
+                        <span class="country-flag" id="local-flag">🏳️</span>
+                        <span class="country-name" id="local-country-name">Your Location</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chat Duration and Connection Info -->
+            <div class="connection-info">
+                <div class="fun-fact" id="connection-fact">🌍 Connecting people worldwide!</div>
+                <div class="chat-duration">⏱️ <span id="chat-timer">00:00</span></div>
+            </div>
+
+            <!-- Video Controls -->
+            <div class="video-controls">
+                <button id="toggle-mic" class="control-btn mic-btn active">
+                    <span class="btn-icon">🎤</span>
+                    <span class="btn-label">Mic</span>
+                </button>
+
+                <button id="toggle-camera" class="control-btn camera-btn active">
+                    <span class="btn-icon">📹</span>
+                    <span class="btn-label">Camera</span>
+                </button>
+
+                <button id="next-stranger" class="control-btn next-btn">
+                    <span class="btn-icon">⏭️</span>
+                    <span class="btn-label">Next</span>
+                </button>
+
+                <button id="disconnect-chat" class="control-btn disconnect-btn">
+                    <span class="btn-icon">📞</span>
+                    <span class="btn-label">End</span>
+                </button>
+
+                <button id="report-user" class="control-btn report-btn">
+                    <span class="btn-icon">🚨</span>
+                    <span class="btn-label">Report</span>
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Modals -->
+    <div id="stats-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>📊 Live Statistics</h3>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <div class="stat-value" id="stat-active-users">-</div>
+                        <div class="stat-label">Active Users</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="stat-total-connections">-</div>
+                        <div class="stat-label">Total Connections</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="stat-active-rooms">-</div>
+                        <div class="stat-label">Active Chats</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="stat-waiting-users">-</div>
+                        <div class="stat-label">Waiting Users</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="safety-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>🛡️ Safety Guidelines</h3>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="safety-rules">
+                    <div class="rule-item">
+                        <div class="rule-icon">🔞</div>
+                        <div class="rule-text">Must be 18+ to use this service</div>
+                    </div>
+                    <div class="rule-item">
+                        <div class="rule-icon">🚫</div>
+                        <div class="rule-text">No inappropriate content or behavior</div>
+                    </div>
+                    <div class="rule-item">
+                        <div class="rule-icon">🔒</div>
+                        <div class="rule-text">Keep your personal information private</div>
+                    </div>
+                    <div class="rule-item">
+                        <div class="rule-icon">🚨</div>
+                        <div class="rule-text">Report any violations immediately</div>
+                    </div>
+                    <div class="rule-item">
+                        <div class="rule-icon">❌</div>
+                        <div class="rule-text">You can exit any chat at any time</div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn--primary modal-close">I Understand</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="report-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>🚨 Report User</h3>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>What type of violation would you like to report?</p>
+                <div class="report-options">
+                    <button class="report-option" data-reason="inappropriate_content">Inappropriate content</button>
+                    <button class="report-option" data-reason="harassment">Harassment or bullying</button>
+                    <button class="report-option" data-reason="spam">Spam or advertising</button>
+                    <button class="report-option" data-reason="underage">Underage user</button>
+                    <button class="report-option" data-reason="other">Other violation</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Container -->
+    <div id="notification-container" class="notification-container"></div>
+
+    <!-- Scripts -->
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="webrtc.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
