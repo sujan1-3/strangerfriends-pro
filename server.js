@@ -27,7 +27,7 @@ app.use(
     contentSecurityPolicy: {
       directives: {
         ...helmet.contentSecurityPolicy.getDefaultDirectives(),
-        "script-src": ["'self'", "https://cdn.socket.io"],
+        "script-src": ["'self'", "https://cdn.socket.io", "'unsafe-inline'"],
         "script-src-attr": ["'self'", "'unsafe-inline'"],
       },
     },
@@ -35,6 +35,7 @@ app.use(
 );
 
 app.use(cors({ origin: process.env.CORS_ORIGIN || "*" }));
+app.use(express.json());
 
 // Serve the static frontend files
 app.use(express.static(path.join(__dirname, 'public')));
@@ -82,9 +83,42 @@ function findMatchingUser(currentUser) {
     return null;
 }
 
+// Routes
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+app.get('/api/health', (req, res) => {
+    res.json({
+        status: 'healthy',
+        timestamp: new Date().toISOString(),
+        uptime: process.uptime(),
+        connectedUsers: connectedUsers.size,
+        activeRooms: activeRooms.size
+    });
+});
+
+app.get('/api/stats', (req, res) => {
+    res.json({
+        connectedUsers: connectedUsers.size,
+        activeRooms: activeRooms.size,
+        waitingUsers: Array.from(waitingUsers.values()).flat().length
+    });
+});
+
 // Socket.IO Logic
 io.on('connection', (socket) => {
+    console.log('User connected:', socket.id);
     const userCountry = detectCountry(getClientIP(socket));
+    
+    // Send ICE servers and country info to client
+    socket.emit('ice-servers', { 
+        iceServers: [
+            { urls: 'stun:stun.l.google.com:19302' },
+            { urls: 'stun:stun1.l.google.com:19302' }
+        ], 
+        country: userCountry 
+    });
     
     socket.on('set-preferences', (preferences) => {
         const currentUser = {
@@ -99,6 +133,11 @@ io.on('connection', (socket) => {
         if (match) {
             const roomId = uuidv4();
             activeRooms.set(roomId, [currentUser.socketId, match.socketId]);
+            
+            // Join both users to the room
+            socket.join(roomId);
+            io.sockets.sockets.get(match.socketId)?.join(roomId);
+            
             io.to(currentUser.socketId).emit('match-found', { roomId, partner: match });
             io.to(match.socketId).emit('match-found', { roomId, partner: currentUser });
         } else {
@@ -107,18 +146,41 @@ io.on('connection', (socket) => {
         }
     });
 
-    socket.on('offer', (data) => { io.to(data.partnerId).emit('offer', { offer: data.offer, senderId: socket.id }); });
-    socket.on('answer', (data) => { io.to(data.partnerId).emit('answer', { answer: data.answer, senderId: socket.id }); });
-    socket.on('ice-candidate', (data) => { io.to(data.partnerId).emit('ice-candidate', { candidate: data.candidate, senderId: socket.id }); });
+    socket.on('offer', (data) => { 
+        socket.to(data.roomId).emit('offer', { offer: data.offer, from: socket.id }); 
+    });
+    
+    socket.on('answer', (data) => { 
+        socket.to(data.roomId).emit('answer', { answer: data.answer, from: socket.id }); 
+    });
+    
+    socket.on('ice-candidate', (data) => { 
+        socket.to(data.roomId).emit('ice-candidate', { candidate: data.candidate, from: socket.id }); 
+    });
 
     socket.on('disconnect', () => {
+        console.log('User disconnected:', socket.id);
         connectedUsers.delete(socket.id);
         for(const gender of ['male', 'female', 'both']) {
             waitingUsers.set(gender, waitingUsers.get(gender).filter(u => u.socketId !== socket.id));
+        }
+        
+        // Clean up rooms
+        for (const [roomId, users] of activeRooms.entries()) {
+            if (users.includes(socket.id)) {
+                activeRooms.delete(roomId);
+                // Notify other user in room
+                const otherUser = users.find(id => id !== socket.id);
+                if (otherUser) {
+                    io.to(otherUser).emit('partner-left');
+                }
+                break;
+            }
         }
     });
 });
 
 server.listen(PORT, () => {
-    console.log(`Server is running on http://localhost:${PORT}`);
+    console.log(`Server is running on port ${PORT}`);
 });
+
