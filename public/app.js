@@ -68,14 +68,3 @@ class StrangerFriendsApp {
     }
 }
 
-// Dummy WebRTCManager class to avoid errors if the file is missing
-class WebRTCManager {
-    setSocket(socket) { this.socket = socket; }
-    setRoomId(roomId) { this.roomId = roomId; }
-    setPartnerId(partnerId) { this.partnerId = partnerId; }
-    startCall() { console.log('Starting WebRTC call...'); }
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-    new StrangerFriendsApp();
-});
